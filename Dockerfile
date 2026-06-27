@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn:python3.10 AS carlemany-backend-base
+FROM tiangolo/uvicorn-gunicorn:python3.12 AS carlemany-backend-base
 
 RUN pip install --upgrade pip
 

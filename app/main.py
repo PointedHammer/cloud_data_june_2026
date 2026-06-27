@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI # type: ignore
 
 app = FastAPI()
 
-print("Modified file")
+
 
 @app.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
