@@ -1,34 +1,70 @@
+from email.header import Header
+import token
 from typing import Optional
-
-from fastapi import APIRouter, Body
-from pydantic import BaseModel
+import hashlib
+import uuid
+from fastapi import APIRouter, Body, Header, HTTPException, status  # type: ignore
+from pydantic import BaseModel # type: ignore
 
 router = APIRouter()
 
 user_database = {}
+token_database = {}
+
+class user(BaseModel):
+    email: str
+    hashed_password: str
+    address: Optional[str] = None
 
 class RegisterInput(BaseModel):
     email: str
     password: str
     address: Optional[str] = None
 
-@router.get("")
-async def register(input : RegisterInput = Body()) -> dict[str, str]:
-    return {"status": "ok"}
+class LoginInput(BaseModel):
+    email: str
+    password: str
 
-@router.post("")
-async def login() -> dict[str, str]:
-    return {"status": "ok"}
+def compute_hash_password(email: str, password: str) -> str:
+    return hashlib.sha256((email + password).encode()).hexdigest()
 
-@router.post("/id")
-async def logout() -> dict[str, str]:
-    return {"status": "ok"}
-
-@router.get("/id")
+@router.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
-@router.get("/id")
-async def introspect() -> dict[str, str]:
+@router.post("/register")
+async def register(input : RegisterInput = Body()) -> dict[str, str]:
+    if input.email in user_database:
+        raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="User already exists")
+    user_database[input.email] = user(
+        email=input.email,
+        hashed_password=compute_hash_password(input.email, input.password),
+        address=input.address
+    )
+    return {"status": "ok"}
+
+@router.post("/login")
+async def login(input: LoginInput = Body()) -> dict[str, str]:
+    if input.email not in user_database:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="User not found")
+    database_hashed_password = user_database[input.email].hashed_password
+    hashed_password = compute_hash_password(input.email, input.password)
+    if database_hashed_password != hashed_password:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    generated_token = str(uuid.uuid4())
+    token_database[generated_token] = input.email
+
+    return {"token": generated_token}
+
+@router.post("/logout")
+async def logout(Auth: str = Header()) -> dict[str, str]:
+    if token not in token_database:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    del(token_database[Auth])
+    return {"status": "ok"}
+
+
+@router.get("/introspect")
+async def introspect(Auth: str = Header()) -> dict[str, str]:
     return {"status": "ok"}
 

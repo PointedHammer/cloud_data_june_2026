@@ -2,27 +2,28 @@ from fastapi import APIRouter
 router = APIRouter()
 
 
-@router.get("/")
-async def healthcheck_get() -> dict[str, str]:
+@router.get("/files")
+async def Get() -> dict[str, str]:
     return {"status": "ok"}
 
-@router.post("/")
-async def healthcheck_post() -> dict[str, str]:
-    return {"status": "ok"}
-
-@router.get("/{id}")
-async def get_by_id(id: str) -> dict[str, str]:
-    return {"status": "ok"}
-
-@router.post("/id")
-async def post_id() -> dict[str, str]:
-    return {"status": "ok"}
-
-@router.delete("/id")
-async def delete_id() -> dict[str, str]:
+@router.post("/files")
+async def post() -> dict[str, str]:
     return {"status": "ok"}
 
 @router.post("/merge")
 async def merge_post() -> dict[str, str]:
     return {"status": "ok"}
+
+@router.get("/files/{id}")
+async def get_by_id(id: str) -> dict[str, str]:
+    return {"status": "ok"}
+
+@router.post("/files/{id}")
+async def post_id(id: str) -> dict[str, str]:
+    return {"status": "ok"}
+
+@router.delete("/files/{id}")
+async def delete_id(id: str) -> dict[str, str]:
+    return {"status": "ok"}
+
 

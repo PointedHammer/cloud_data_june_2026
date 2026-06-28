@@ -1,26 +1,12 @@
-from fastapi import FastAPI # type: ignore
+from fastapi import FastAPI
+from app.auth.router import router as auth_router
+from app.files.router import router as files_router
 
 app = FastAPI()
 
-
+app.include_router(auth_router)
+app.include_router(files_router)
 
 @app.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
-
-@app.post("/register")
-async def register() -> dict[str, str]:
-    return {"status": "ok"}
-
-@app.post("/login")
-async def login() -> dict[str, str]:
-    return {"status": "ok"}
-
-@app.post("/logout")
-async def logout() -> dict[str, str]:
-    return {"status": "ok"}
-
-@app.get("/introspect")
-async def introspect() -> dict[str, str]:
-    return {"status": "ok"}
-
