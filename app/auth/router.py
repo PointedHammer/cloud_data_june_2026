@@ -63,8 +63,17 @@ async def logout(Auth: str = Header()) -> dict[str, str]:
     del(token_database[Auth])
     return {"status": "ok"}
 
+class IntrospectOutput(BaseModel):
+    email: str
+    address: Optional[str] = None
 
 @router.get("/introspect")
-async def introspect(Auth: str = Header()) -> dict[str, str]:
-    return {"status": "ok"}
+async def introspect(Auth: str = Header()) -> IntrospectOutput:
+    if Auth not in token_database:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    email = token_database[Auth]
+    user = user_database.get(email)
+    if not user:
+        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND)
+    return IntrospectOutput(email=user.email, address=user.address)
 
