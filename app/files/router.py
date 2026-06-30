@@ -1,8 +1,15 @@
 from typing import Optional
 from fastapi import APIRouter, Header, HTTPException, Body, UploadFile, File, status  # type: ignore
 from pydantic import BaseModel # type: ignore
+import importlib
+from pypdf import PdfMerger  # type: ignore
 import httpx  # type: ignore
 import uuid
+
+try:
+    PDFMerger = importlib.import_module("pypdf").PDFMerger
+except ModuleNotFoundError:
+    PDFMerger = None
 
 
 router = APIRouter()
@@ -75,10 +82,46 @@ async def post(Auth: str = Header()) -> dict[str, str]:
     current_user = await introspect(Auth)
     return {"status": "ok"}
 
+class PostFilesMerge(BaseModel):
+    file1_id: int
+    file2_id: int    
+
 @router.post("/merge")
-async def merge_post(Auth: str = Header()) -> dict[str, str]:
+async def merge_post(Auth: str = Header(), input: PostFilesMerge = Body()) -> int:
     current_user = await introspect(Auth)
-    return {"status": "ok"}
+    global id_counter
+    current_file1 : FileBusinessObject = await get_file(current_user.email, input.file1_id)
+    current_file2 : FileBusinessObject = await get_file(current_user.email, input.file2_id)
+    if current_file1.path is None or current_file2.path is None:
+        raise HTTPException(status_code=status.BAD_REQUEST, detail="Both files must have content to merge.")
+    file_path_1 = current_file1.path
+
+    file_path_2 = current_file2.path
+
+    pdfs = [file_path_1, file_path_2]
+
+    merger = PdfMerger()
+
+    for pdf in pdfs:
+
+        merger.append(pdf)
+
+    merged_name = "files/" + current_file1.title + "_" + current_file2.title + ".pdf"
+
+    merger.write(merged_name)
+
+    merger.close()
+
+    merged_file = FileBusinessObject(
+        id=id_counter,
+        user_id=current_user.email,
+        title=f"{current_file1.title}_{current_file2.title}",
+        author=f"{current_file1.author}_{current_file2.author}",
+        path=merged_name
+    )
+    files_database[id_counter] = merged_file
+    id_counter += 1
+    return merged_file.id
 
 class FilesIdGetOutput(BaseModel):
     title: str
