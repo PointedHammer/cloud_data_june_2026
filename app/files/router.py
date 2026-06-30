@@ -1,7 +1,9 @@
 from typing import Optional
-from fastapi import APIRouter, Header, HTTPException, Body, UploadFile, File  # type: ignore
+from fastapi import APIRouter, Header, HTTPException, Body, UploadFile, File, status  # type: ignore
 from pydantic import BaseModel # type: ignore
 import httpx  # type: ignore
+import uuid
+
 
 router = APIRouter()
 files_database = {}
@@ -13,8 +15,9 @@ class User(BaseModel):
 
 class FileBusinessObject(BaseModel):
     id: int
-    user: User
+    user_id: str
     title: str
+    author: str
     path: Optional[str] = None
 
 async def introspect(token: str) -> User:
@@ -40,18 +43,27 @@ async def introspect(token: str) -> User:
 
     return User(**response.json())
 
+async def get_file(user_id : str, id: int) -> FileBusinessObject:
+     if id >= id_counter or id < 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+     current_file = files_database[id]
+     if current_file.user_id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+     return current_file
+     
+
 class FilesPostInput(BaseModel):
     title: str
     author: str
 
-@router.get("/files")
-async def Get(Auth: str = Header(), input: FilesPostInput = Body()) -> int:
+@router.post("/files")
+async def post_files(Auth: str = Header(), input: FilesPostInput = Body()) -> int:
     current_user = await introspect(Auth)
     global id_counter
     current_id = id_counter
     id_counter += 1
     file = FileBusinessObject(id=current_id, 
-                              user=current_user.email, 
+                              user_id=current_user.email, 
                               title=input.title, 
                               author=input.author)
     files_database[current_id] = file
@@ -68,15 +80,27 @@ async def merge_post(Auth: str = Header()) -> dict[str, str]:
     current_user = await introspect(Auth)
     return {"status": "ok"}
 
+class FilesIdGetOutput(BaseModel):
+    title: str
+    author: str
+
 @router.get("/files/{id}")
-async def get_by_id(id: int, Auth: str = Header()) -> dict[str, str]:
+async def get_by_id(id: int, Auth: str = Header()) -> FilesIdGetOutput:
     current_user = await introspect(Auth)
-    return {"status": "ok"}
+    current_file : FileBusinessObject = await get_file(current_user.email, id)
+    return FilesIdGetOutput(title=current_file.title, author=current_file.author)
 
 @router.post("/files/{id}")
 async def post_id(id: int, Auth: str = Header(), file_content: UploadFile = File()) -> dict[str, str]:
     current_user = await introspect(Auth)
-    return {"status": "ok"}
+    current_file = await get_file(current_user.email, id)
+    filename = str(uuid.uuid4())
+    prefix = "app/files/"
+    with open(prefix + filename + ".pdf", "wb") as buffer:
+        while chunk := await file_content.read(8192):
+            buffer.write(chunk)
+    current_file.path = prefix + filename + ".pdf"
+    return {}
 
 @router.delete("/files/{id}")
 async def delete_id(id: int, Auth: str = Header()) -> dict[str, str]:
