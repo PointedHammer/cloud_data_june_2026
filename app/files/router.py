@@ -7,15 +7,15 @@ router = APIRouter()
 files_database = {}
 id_counter = 0
 
+class User(BaseModel):
+    email: str
+    address: Optional[str] = None
+
 class FileBusinessObject(BaseModel):
     id: int
     user: User
     title: str
     path: Optional[str] = None
-
-class User(BaseModel):
-    email: str
-    address: Optional[str] = None
 
 async def introspect(token: str) -> User:
     url = "http://0.0.0.0:80/introspect"
@@ -45,7 +45,7 @@ class FilesPostInput(BaseModel):
     author: str
 
 @router.get("/files")
-async def Get(Auth: str = Header(), input: FilesPostInput = Body()) -> dict[str, str]:
+async def Get(Auth: str = Header(), input: FilesPostInput = Body()) -> int:
     current_user = await introspect(Auth)
     global id_counter
     current_id = id_counter
@@ -55,7 +55,7 @@ async def Get(Auth: str = Header(), input: FilesPostInput = Body()) -> dict[str,
                               title=input.title, 
                               author=input.author)
     files_database[current_id] = file
-    return {"status": "ok"}
+    return current_id
 
 
 @router.post("/files")
