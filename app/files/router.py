@@ -6,10 +6,7 @@ from pypdf import PdfMerger  # type: ignore
 import httpx  # type: ignore
 import uuid
 
-try:
-    PDFMerger = importlib.import_module("pypdf").PDFMerger
-except ModuleNotFoundError:
-    PDFMerger = None
+PdfMerger = importlib.import_module("pypdf").PdfMerger
 
 
 router = APIRouter()
