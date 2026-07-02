@@ -50,10 +50,10 @@ async def introspect(token: str) -> User:
 
     return User(**response.json())
 
-async def get_file(user_id : str, id: int) -> FileBusinessObject:
-     if id >= id_counter or id < 0:
+async def get_file(user_id : str, file_id: int) -> FileBusinessObject:
+     if file_id >= id_counter or file_id < 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-     current_file = files_database[id]
+     current_file = files_database[file_id]
      if current_file.user_id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
      return current_file
@@ -129,6 +129,7 @@ class FilesIdGetOutput(BaseModel):
 
 @router.get("/files/{id}")
 async def get_by_id(id: int, Auth: str = Header()) -> FilesIdGetOutput:
+
     current_user = await introspect(Auth)
     current_file : FileBusinessObject = await get_file(current_user.email, id)
     return FilesIdGetOutput(title=current_file.title, author=current_file.author)

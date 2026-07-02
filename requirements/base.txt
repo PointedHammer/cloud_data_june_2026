@@ -2,3 +2,4 @@ fastapi==0.100.1
 cryptography==3.4.8
 httpx==0.28.1
 python-multipart==0.0.9
+pypdf==4.2.6
