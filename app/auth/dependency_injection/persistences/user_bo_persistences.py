@@ -4,7 +4,7 @@
 from dependency_injector import containers, providers
 
 
-from ...persistence.memory_database.user_bo import UserBOMemoryPersistence
+from app.auth.persistence.memory.user_bo import UserBoMemoryPersistenceService
 
 
 
@@ -12,6 +12,7 @@ class UserBOPersistences(containers.DeclarativeContainer):
 
     memory = providers.Singleton(
 
-        UserBOMemoryPersistence,
-
+        UserBoMemoryPersistenceService,
     )
+
+    carlemany =  memory

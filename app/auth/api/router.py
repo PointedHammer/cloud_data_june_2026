@@ -5,6 +5,9 @@ import hashlib
 import uuid
 from fastapi import APIRouter, Body, Header, HTTPException, status  # type: ignore
 from pydantic import BaseModel # type: ignore
+from cryptography.hazmat.primitives import hashes
+
+from app.auth.domain.services.computed_hashed_password_service import ComputeHashedPasswordService
 
 router = APIRouter()
 
@@ -25,9 +28,9 @@ class LoginInput(BaseModel):
     email: str
     password: str
 
-def compute_hash_password(email: str, password: str) -> str:
-    hash_value = hashlib.sha256((email + password).encode()).hexdigest()
-    return hash_value
+
+
+compute_hashed_password_service = ComputeHashedPasswordService()
 
 @router.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
@@ -39,7 +42,7 @@ async def register(input : RegisterInput = Body()) -> dict[str, str]:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="User already exists")
     user_database[input.email] = user(
         email=input.email,
-        hashed_password=compute_hash_password(input.email, input.password),
+        hashed_password=compute_hashed_password_service(input.email, input.password),
         address=input.address
     )
     return {"status": "ok"}
@@ -49,7 +52,7 @@ async def login(input: LoginInput = Body()) -> dict[str, str]:
     if input.email not in user_database:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="User not found")
     database_hashed_password = user_database[input.email].hashed_password
-    hashed_password = compute_hash_password(input.email, input.password)
+    hashed_password = compute_hashed_password_service(input.email, input.password)
     if database_hashed_password != hashed_password:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     generated_token = str(uuid.uuid4())
