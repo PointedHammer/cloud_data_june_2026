@@ -26,7 +26,8 @@ class LoginInput(BaseModel):
     password: str
 
 def compute_hash_password(email: str, password: str) -> str:
-    return hashlib.sha256((email + password).encode()).hexdigest()
+    hash_value = hashlib.sha256((email + password).encode()).hexdigest()
+    return hash_value
 
 @router.get("/healthcheck")
 async def healthcheck() -> dict[str, str]:
