@@ -13,9 +13,9 @@ class GetIntrospectController:
         self.user_database = user_database
 
     def __call__(self, token: str) -> userBO:
-        email = self.token_database.get(token=token)
+        email = token_database.get(token=token)
         if email is None:
             raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
-        user = self.user_database.get(token=email)
+        user = user_database.get(email=email)
 
         return user
