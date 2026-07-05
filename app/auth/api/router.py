@@ -7,6 +7,7 @@ from fastapi import APIRouter, Body, Header, HTTPException, status  # type: igno
 from pydantic import BaseModel # type: ignore
 from cryptography.hazmat.primitives import hashes
 
+from app.auth.dependency_injection.domain.post_register import PostRegisterControllers
 from app.auth.domain.services.computed_hashed_password_service import ComputeHashedPasswordService
 
 router = APIRouter()
@@ -28,6 +29,10 @@ class LoginInput(BaseModel):
     email: str
     password: str
 
+post_login_controller = PostRegisterControllers.carlemany()
+
+post_register_controller = PostRegisterControllers.carlemany()
+
 
 
 compute_hashed_password_service = ComputeHashedPasswordService()
@@ -38,27 +43,32 @@ async def healthcheck() -> dict[str, str]:
 
 @router.post("/register")
 async def register(input : RegisterInput = Body()) -> dict[str, str]:
-    if input.email in user_database:
-        raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="User already exists")
-    user_database[input.email] = user(
-        email=input.email,
-        hashed_password=compute_hashed_password_service(input.email, input.password),
-        address=input.address
-    )
-    return {"status": "ok"}
+    post_register_controller(
+        email = input.email, 
+        password = input.password, 
+        address = input.address)
+    return {}
 
 @router.post("/login")
-async def login(input: LoginInput = Body()) -> dict[str, str]:
-    if input.email not in user_database:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="User not found")
-    database_hashed_password = user_database[input.email].hashed_password
-    hashed_password = compute_hashed_password_service(input.email, input.password)
-    if database_hashed_password != hashed_password:
-        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    generated_token = str(uuid.uuid4())
-    token_database[generated_token] = input.email
+async def post_login(input: LoginInput = Body()) -> str:
+    generated_token = post_login_controller(
+        email=input.email,
+        password=input.password,
+    )
 
-    return {"token": generated_token}
+    # Ensure a string is returned. Support several possible shapes of the controller result.
+    if isinstance(generated_token, str):
+        return generated_token
+    if isinstance(generated_token, dict):
+        for key in ("token", "access_token", "value"):
+            if key in generated_token:
+                return str(generated_token[key])
+    for attr in ("token", "access_token", "value"):
+        if hasattr(generated_token, attr):
+            return str(getattr(generated_token, attr))
+
+    # Fallback: stringify the object
+    return str(generated_token)
 
 @router.post("/logout")
 async def logout(Auth: str = Header()) -> dict[str, str]:
