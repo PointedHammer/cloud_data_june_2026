@@ -6,3 +6,5 @@ pypdf==4.3.1
 dependency_injector==4.41.0
 pydantic-settings==2.0.0
 tortoise-orm==0.19.3
+aerich==0.6.3
+asyncpg==0.28.0
