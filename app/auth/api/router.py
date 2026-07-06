@@ -1,8 +1,6 @@
 from email.header import Header
 import token
 from typing import Optional
-import hashlib
-import uuid
 from fastapi import APIRouter, Body, Header, HTTPException, status  # type: ignore
 from pydantic import BaseModel # type: ignore
 from cryptography.hazmat.primitives import hashes
@@ -51,24 +49,12 @@ async def register(input : RegisterInput = Body()) -> dict[str, str]:
 
 @router.post("/login")
 async def post_login(input: LoginInput = Body()) -> str:
-    generated_token = post_login_controller(
-        email=input.email,
-        password=input.password,
+    generated_token = post_login_controller(   
+        email = input.email,
+        password = input.password
     )
 
-    # Ensure a string is returned. Support several possible shapes of the controller result.
-    if isinstance(generated_token, str):
-        return generated_token
-    if isinstance(generated_token, dict):
-        for key in ("token", "access_token", "value"):
-            if key in generated_token:
-                return str(generated_token[key])
-    for attr in ("token", "access_token", "value"):
-        if hasattr(generated_token, attr):
-            return str(getattr(generated_token, attr))
-
-    # Fallback: stringify the object
-    return str(generated_token)
+    return generated_token
 
 @router.post("/logout")
 async def logout(Auth: str = Header()) -> dict[str, str]:

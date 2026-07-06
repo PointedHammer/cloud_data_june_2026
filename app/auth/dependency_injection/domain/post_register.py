@@ -9,7 +9,7 @@ from app.auth.dependency_injection.persistences.user_bo_persistences import User
 
 
 
-class RegisterControllers(containers.DeclarativeContainer):
+class PostRegisterControllers(containers.DeclarativeContainer):
 
     carlemany = providers.Singleton(
 
