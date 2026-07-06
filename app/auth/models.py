@@ -1,4 +1,4 @@
-from toroise import fields
+from tortoise import fields
 from tortoise.models import Model
 
 class User(Model):
@@ -6,6 +6,6 @@ class User(Model):
     hashed_password = fields.CharField(max_length=64)
     address = fields.CharField(max_length=255, null=True, default=None)
 
-    class Meta:
+    class Meta(Model.Meta):
         table = "users"
         
