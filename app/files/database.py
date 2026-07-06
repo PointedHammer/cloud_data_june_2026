@@ -1,4 +1,5 @@
-from app.config import DATABASE_URL, models
+from app.files.config import DATABASE_URL
+from app.files.database import models
 
 models = ["aerich.models", "app.auth.models"]
 

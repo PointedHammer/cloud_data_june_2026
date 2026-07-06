@@ -57,12 +57,56 @@ services:
       retries: 5
 
     ports:
-
       - "5432:5432"
+    networks:
+      - carlemany-net
+
+  migrate:
+    build:
+      context: .
+      target: carlemany-backend-dev
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: .
+        target: /carlemany-backend
+    networks:
+      - carlemany-net
+    depends_on:
+      - postgres
+    entrypoint: aerich upgrade
+
+
+  init_db:
+
+    build:
+
+      context: .
+
+      target: carlemany-backend-dev
+
+    env_file:
+
+      - .env
+
+    volumes:
+
+      - type: bind
+
+        source: .
+
+        target: /carlemany-backend
 
     networks:
 
       - carlemany-net
+
+    depends_on:
+
+      - postgres
+
+    entrypoint: sh infra/init_db.sh
 
   black:
     image: carlemany-backend-dev:latest

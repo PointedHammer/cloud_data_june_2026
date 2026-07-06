@@ -1,6 +1,6 @@
 from email.header import Header
 import token
-from typing import Optional
+from typing import Any, Optional
 from fastapi import APIRouter, Body, Header, HTTPException, status  # type: ignore
 from pydantic import BaseModel # type: ignore
 from cryptography.hazmat.primitives import hashes
@@ -48,7 +48,7 @@ async def register(input : RegisterInput = Body()) -> dict[str, str]:
     return {}
 
 @router.post("/login")
-async def post_login(input: LoginInput = Body()) -> str:
+async def post_login(input: LoginInput = Body()) -> Any:
     generated_token = post_login_controller(   
         email = input.email,
         password = input.password
