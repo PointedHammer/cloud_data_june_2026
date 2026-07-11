@@ -1,12 +1,13 @@
 import uuid
-
+from app.auth.domain.persistence.token_bo import TokenPersistenceInterface
 from app.auth.domain.bo.user_bo import userBO
 
 
-class TokenMemoryPersistenceService:
+class TokenMemoryPersistenceService(TokenPersistenceInterface):
     
     def __init__(self):
         self.token_database = {}
+        
 
     def get(self, token: str) -> str:
         return self.token_database[token]
@@ -16,6 +17,7 @@ class TokenMemoryPersistenceService:
         self.token_database[email] = generated_token
         return generated_token
 
-    def create(self, user: userBO) -> userBO:
-        self.user_database[user.email] = user
-        return user
+    def remove(self, token: str):
+        if token not in self.token_database:
+            raise Exception("Token not found")
+        del self.token_database[token]

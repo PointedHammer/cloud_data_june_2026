@@ -4,7 +4,7 @@ from app.auth.domain.bo.user_bo import userBO
 
 
 
-class TokenBOPersistenceInterface(ABC):
+class TokenPersistenceInterface(ABC):
     @abstractmethod
     def get(self, token: str) -> str:
         pass
@@ -12,4 +12,8 @@ class TokenBOPersistenceInterface(ABC):
 
     @abstractmethod
     def generate_token(self, email: str) -> str:
+        pass
+
+    @abstractmethod
+    def remove(self, token: str):
         pass
