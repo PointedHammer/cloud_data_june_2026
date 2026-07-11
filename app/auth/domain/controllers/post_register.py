@@ -13,14 +13,14 @@ class PostRegisterController:
         self.user_database = user_database
         self.compute_hashed_pasword_service = ComputeHashedPasswordService()
 
-    def __call__(self, email: str, password: str, address: Optional[str] = None) -> UserBO:
-        if self.user_database.exists(user_email=email):
+    async def __call__(self, email: str, password: str, address: Optional[str] = None) -> UserBO:
+        if await self.user_database.exists(user_email=email):
                     raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="User already exists")
         current_new_user = UserBO(            
             email=email,
             hashed_password=self.compute_hashed_pasword_service(email, password),
             address=address
         )
-        self.user_database.create(user=current_new_user)
+        await self.user_database.create(user=current_new_user)
 
         return current_new_user
